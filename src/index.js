@@ -1,7 +1,7 @@
-// let addToy = false;
+let addToy = false;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const url = 'http://localhost:3007/toys'
+  const url = 'http://localhost:3000/toys'
   const addBtn = document.querySelector("#new-toy-btn");
   const toyCollection = document.querySelector("div#toy-collection");
   const toyFormContainer = document.querySelector(".container");
@@ -31,13 +31,52 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="card">
     <h2>${toy.name}</h2>
     <img src=${toy.image} class="toy-avatar" />
-    <p>4 Likes: ${toy.likes}  </p>
+    <p>Likes: ${toy.likes}</p>
     <button class="like-btn">Like <3</button>
   </div>
     `
     toyCollection.append(card)
   }
+  const newToyForm = document.querySelector('.add-toy-form')
+
+  newToyForm.addEventListener('submit',function(event){
+    event.preventDefault()
+    const name = event.target[0].value
+    const image = event.target[1].value
+    const likes = 0
+    const toy = {name, image, likes}
+    renderOneToy(toy)
+
+    fetch (url, {
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json", 
+          Accept: "application/json" 
+      },
+      body: JSON.stringify(toy)
+    })
+    .then(response => response.json())
+    event.target.reset()
+  })
 
   renderAllToys()
 
+  toyCollection.addEventListener('click', function(event){
+    const card = event.target.closest('.toy-card')
+    if (event.target.className === 'like-btn'){
+      const likesDisplay = card.querySelector('p')
+      let likes = (likesDisplay.textContent).split(" ")[1]
+      // console.log(likes)
+      fetch (`${url}/${card.dataset.id}`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json", 
+            Accept: "application/json" 
+        },
+        body: JSON.stringify({likes: likes ++})
+      })
+      .then(response => response.json())
+      .then(data => likesDisplay.textContent = `Likes: ${data.likes} `)
+    }
+  })
 });
